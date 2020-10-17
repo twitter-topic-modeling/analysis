@@ -1,18 +1,22 @@
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import *
 import json
 import sys
+from pre_processing import pre_process
+
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import *
 from pyspark.sql.types import *
 
-KAFKA_TOPIC = 'rss-test-1'
+from pyspark.ml import PipelineModel
+from pyspark.ml.classification import LogisticRegressionModel
+from pyspark.ml.feature import IndexToString
 
-def fun(avg_senti_val):
-	try:
-		if avg_senti_val < 0: return 'NEGATIVE'
-		elif avg_senti_val == 0: return 'NEUTRAL'
-		else: return 'POSITIVE'
-	except TypeError:
-		return 'NEUTRAL'
+lrModel = None
+KAFKA_INPUT_TOPIC = 'rss-test-1'
+KAFKA_OUTPUT_TOPIC = 'rss-analysis-1'
+vals = ['ในประเทศ', 'การเมือง', 'กีฬา', 'อาชญากรรม', 'ต่างประเทศ', 'เศรษฐกิจ', 'บันเทิง', 'ไลฟ์สไตล์', 'สิ่งแวดล้อม', 'เทคโนโลยี']
+
+def convert_label(prediction):
+    return vals[int(prediction)]
 
 if __name__ == "__main__":
 
@@ -21,30 +25,38 @@ if __name__ == "__main__":
         StructField("title", StringType(), True),
         StructField("summary", StringType(), True),
         StructField("source", StringType(), True),
-        StructField("pubDate", DateType(), True)
+        StructField("pubDate", StringType(), True)
     ])
 
     spark = SparkSession.builder.appName("RSS-Streaming").getOrCreate()
+    lrModel = LogisticRegressionModel.load('/project/lrmodel')
 
-    kafka_df = spark.readStream.format("kafka").option("kafka.bootstrap.servers", "localhost:9092").option("subscribe", KAFKA_TOPIC).load()
-
+    kafka_df = spark.readStream.format("kafka").option("kafka.bootstrap.servers", "localhost:9092").option("subscribe", KAFKA_INPUT_TOPIC).option("failOnDataLoss","false").load()
     kafka_df_string = kafka_df.selectExpr("CAST(value AS STRING)")
 
+    udf_pre_process = udf(pre_process, ArrayType(StringType()))
+    udf_convert_label = udf(convert_label, StringType())
+
     df = kafka_df_string.select(from_json(col("value"), schema).alias("data")).select("data.*")
+    new_df = df.withColumn("tokens", udf_pre_process("title", "summary")).na.drop()
+    pipeline = PipelineModel.load('/project/pipeline')
+    new_df = pipeline.transform(new_df)
+    new_df = lrModel.transform(new_df)
 
-    to_predict_table = df.select('title', 'summary')
-
-	to_predict_table = table_predict_table.withcomlumn("")
-
-    #to_predict_table.show()
-#     sum_val_table = tweets_table.select(avg('senti_val').alias('avg_senti_val'))
-
-    # udf = USER DEFINED FUNCTION
-#     udf_avg_to_status = udf(fun, StringType())
-
-    # avarage of senti_val column to status column
-#     new_df = sum_val_table.withColumn("status", udf_avg_to_status("avg_senti_val"))
-
-    query = to_predict_table.writeStream.outputMode("append").format("console").start()
+    # convert label (index) to label (string)
+    new_df = new_df.withColumn('category', udf_convert_label('prediction'))
+    new_df = new_df.select('url', 'title', 'summary', 'source', 'pubDate', 'category')
+    new_df = new_df.select(to_json(struct('url', 'title', 'summary', 'source', 'pubDate', 'category')).alias('value'))
+    query = new_df.writeStream\
+        .outputMode("append")\
+        .format("kafka")\
+        .option("kafka.bootstrap.servers", "localhost:9092")\
+        .option("checkpointLocation", "/tmp/vaquarkhan/checkpoint")\
+        .option("truncate","false")\
+		.option("failOnDataLoss","false")\
+        .option("topic", KAFKA_OUTPUT_TOPIC).start()
+    # new_df = new_df.select(to_json(struct('url', 'title', 'summary', 'source', 'pubDate', 'category'))).alias('value')
+    # query = new_df.writeStream.outputMode("append").format("console").start()
 
     query.awaitTermination()
+

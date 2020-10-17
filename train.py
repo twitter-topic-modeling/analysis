@@ -8,6 +8,8 @@ df = spark.read.csv('/project/dataset.csv', header = True, inferSchema = True)
 
 df = df.select('title', 'summary', 'labels')
 
+df = df.sample(withReplacement=True, fraction=0.1, seed=100)
+
 map_label = {
     'E-Sport': 5,
     'การเมือง': 1,
@@ -145,11 +147,18 @@ from pyspark.ml.feature import StringIndexer, CountVectorizer
 countVectors = CountVectorizer(inputCol="tokens", outputCol="features", vocabSize=10000, minDF=5)
 
 label_stringIdx = StringIndexer(inputCol = "label_pre", outputCol = "label")
-
-pipeline = Pipeline(stages=[countVectors, label_stringIdx])
+indexer = label_stringIdx.fit(df)
+df = indexer.transform(df)
+meta = [f.metadata for f in df.schema.fields if f.name == "label"]
+labels = meta[0]
+print(labels)
+#pipeline = Pipeline(stages=[countVectors])
 # Fit the pipeline to training documents.
-pipelineFit = pipeline.fit(df)
-dataset = pipelineFit.transform(df)
+#pipelineFit = pipeline.fit(df)
 
-(trainingData, testData) = dataset.randomSplit([0.7, 0.3], seed = 100)
+#pipelineFit.save('/project/pipeline')
+# dataset = pipelineFit.transform(df)
+
+# (trainingData, testData) = dataset.randomSplit([0.7, 0.3], seed = 100)
+
 
