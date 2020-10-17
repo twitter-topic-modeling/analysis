@@ -5,7 +5,7 @@ const formatNews = (source, news) => {
   const extractedImage = _.omit(news, 'enclosures')
 
   const safe = _.pick(news, ['title', 'summary', 'pubdate', 'link'])
-  return { ...safe, source, image }
+  return { ...safe, source }
 }
 
 module.exports = formatNews

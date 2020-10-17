@@ -9,7 +9,7 @@ const topic = 'rss-test-1'
 
 module.exports = {
   send: async (item) => {
-    const payload = { topic, messages: [item] }
+    const payload = { topic, messages: [{ value: item }] }
     await producer.connect()
     await producer.send(payload)
   },
