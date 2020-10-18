@@ -6,6 +6,8 @@ const kafka = require('./kafka')
 
 const feeder = new RssFeedEmitter({ skipFirstLoad: false })
 
+feeder.on('error', console.error)
+
 module.exports = {
   init: (rssList, cb) => {
     console.log('⌛ Initial rss list')
