@@ -54,16 +54,15 @@ def send(producer, item):
 def fetch(url):
     feed = feedparser.parse(url)
     newsList = feed.entries
-    hash_object = hashlib.sha256(str(newsList).encode('utf-8'))
-    hash = hash_object.hexdigest()
-    return newsList, hash
+    # hash_object = hashlib.sha256(str(newsList).encode('utf-8'))
+    # hash = hash_object.hexdigest()
+    return newsList, newsList[0]['link']
 
 def fetch_source(source):
     name = source['name']
     url = source['url']
     newsList, last_hash = fetch(url)
     producer = connect_kafka_producer()
-
     # initial
     for item in newsList:
         item['source'] = name
