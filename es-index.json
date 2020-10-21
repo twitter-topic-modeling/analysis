@@ -1,0 +1,27 @@
+{
+  "settings": {
+    "number_of_shards": 1
+  },
+  "mappings": {
+    "properties": {
+      "url": {
+        "type": "keyword"
+      },
+      "title": {
+        "type": "keyword"
+      },
+      "summary": {
+        "type": "keyword"
+      },
+      "source": {
+        "type": "keyword"
+      },
+      "pubDate": {
+        "type": "date"
+      },
+      "category": {
+        "type": "keyword"
+      }
+    }
+  }
+}
