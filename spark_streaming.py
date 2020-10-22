@@ -1,5 +1,3 @@
-import json
-import sys
 from pre_processing import pre_process
 
 from pyspark.sql import SparkSession
@@ -8,10 +6,9 @@ from pyspark.sql.types import *
 
 from pyspark.ml import PipelineModel
 from pyspark.ml.classification import LogisticRegressionModel
-from pyspark.ml.feature import IndexToString
 
 lrModel = None
-KAFKA_INPUT_TOPIC = 'rss-test-1'
+KAFKA_INPUT_TOPIC = 'rss-raw-1'
 KAFKA_OUTPUT_TOPIC = 'rss-analysis-1'
 vals = ['ในประเทศ', 'การเมือง', 'กีฬา', 'อาชญากรรม', 'ต่างประเทศ', 'เศรษฐกิจ', 'บันเทิง', 'ไลฟ์สไตล์', 'สิ่งแวดล้อม', 'เทคโนโลยี']
 
@@ -55,8 +52,6 @@ if __name__ == "__main__":
         .option("truncate","false")\
 		.option("failOnDataLoss","false")\
         .option("topic", KAFKA_OUTPUT_TOPIC).start()
-    # new_df = new_df.select(to_json(struct('url', 'title', 'summary', 'source', 'pubDate', 'category'))).alias('value')
-    # query = new_df.writeStream.outputMode("append").format("console").start()
 
     query.awaitTermination()
 

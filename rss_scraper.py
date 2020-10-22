@@ -5,7 +5,7 @@ import feedparser
 import time
 
 SEVEN_HOURS = timedelta(hours=7)
-KAFKA_TOPIC = 'rss-test-1'
+KAFKA_TOPIC = 'rss-raw-1'
 
 sources = [
     {'url': 'https://www.thairath.co.th/rss/news', 'name': 'ไทยรัฐ'},
