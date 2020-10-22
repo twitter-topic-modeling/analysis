@@ -1,5 +1,7 @@
 # Text Classification on RSS News Feeds
 
+![Architecture](https://raw.githubusercontent.com/twitter-topic-modeling/analysis/master/assets/architecture.png)
+
 ## Introduction
 
 เนื่องจากปัจจุบันข้อมูลข่าวสารมีมากมาย แล้วถ้าเราต้องการจัดหมวดหมู่ข่าวสารเองอาจต้องใช้เวลานาน เราจึงได้ทำโปรเจคนี้ขึ้นมา เพื่อจัดหมวดหมู่ของข้อมูลข่าวสารให้โดยอัตโนมัติ เมื่อมีข่าวสารใหม่ ๆ เข้ามา
