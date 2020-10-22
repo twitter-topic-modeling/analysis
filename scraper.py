@@ -2,7 +2,6 @@ from time import sleep
 from datetime import datetime, timedelta
 import traceback
 import feedparser
-import hashlib
 import time
 
 SEVEN_HOURS = timedelta(hours=7)
@@ -40,7 +39,6 @@ def connect_kafka_producer():
 
 def send(producer, item):
     if(item is None):
-        # print('pass')
         return
     to_json = {key: item[key] for key in whitelist_keys}
     if item['published_parsed'] is not None:
@@ -54,14 +52,12 @@ def send(producer, item):
 def fetch(url):
     feed = feedparser.parse(url)
     newsList = feed.entries
-    # hash_object = hashlib.sha256(str(newsList).encode('utf-8'))
-    # hash = hash_object.hexdigest()
     return newsList, newsList[0]['link']
 
 def fetch_source(source):
     name = source['name']
     url = source['url']
-    newsList, last_hash = fetch(url)
+    newsList, last_url = fetch(url)
     producer = connect_kafka_producer()
     # initial
     for item in newsList:
@@ -71,11 +67,10 @@ def fetch_source(source):
     while(True):
         try:
             sleep(5)
-            newsList, new_hash = fetch(url)
-            is_updated = new_hash != last_hash
-            # print(is_updated, new_hash, last_hash)
+            newsList, new_url = fetch(url)
+            is_updated = new_url != last_url
             if(is_updated):
-                last_hash = new_hash
+                last_url = new_url
                 item = newsList[0]
                 item['source'] = name
                 send(producer, item)
