@@ -28,7 +28,9 @@ if __name__ == "__main__":
     spark = SparkSession.builder.appName("RSS-Streaming").getOrCreate()
     lrModel = LogisticRegressionModel.load('/project/lrmodel')
 
-    kafka_df = spark.readStream.format("kafka").option("kafka.bootstrap.servers", "localhost:9092").option("subscribe", KAFKA_INPUT_TOPIC).option("failOnDataLoss","false").load()
+    kafka_df = spark.readStream.format("kafka")\
+            .option("kafka.bootstrap.servers", "localhost:9092")\
+            .option("subscribe", KAFKA_INPUT_TOPIC).option("failOnDataLoss","false").load()
     kafka_df_string = kafka_df.selectExpr("CAST(value AS STRING)")
 
     udf_pre_process = udf(pre_process, ArrayType(StringType()))

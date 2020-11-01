@@ -35,18 +35,6 @@
 - Elasticsearch
 - Kibana
 
-## Scraper
+## Dataset
 
-rss_scraper.py
-
-## Spark
-
-spark_streming.py
-
-## Logstash
-
-lohstash.conf
-
-## Elasticsearch
-
-es-index.json
+![TR-TPBS](https://github.com/nakhunchumpolsathien/TR-TPBS/)
